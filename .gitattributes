@@ -1,0 +1,4 @@
+# Byte-exact checkout on every OS: force LF and no end-of-line conversion, so a fresh `git clone`
+# (even on Windows with core.autocrlf=true) reproduces the .gutencode baseline shas and the shipped
+# `python verify.py` passes. Without this, a CRLF checkout would fail the baseline check.
+* -text

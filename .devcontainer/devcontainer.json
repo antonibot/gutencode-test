@@ -1,0 +1,19 @@
+{
+	"name": "spine -- a verified backend (python + go + node)",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+	"features": {
+		"ghcr.io/devcontainers/features/python:1": { "version": "3.13" },
+		"ghcr.io/devcontainers/features/go:1": { "version": "latest" },
+		"ghcr.io/devcontainers/features/node:1": { "version": "22" }
+	},
+	"postCreateCommand": "pip install -r python/requirements.txt && cd go && go mod download",
+	"forwardPorts": [8080],
+	"portsAttributes": {
+		"8080": { "label": "api (dev.py / quickstart)", "onAutoForward": "notify" }
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": ["humao.rest-client", "ms-python.python", "golang.go"]
+		}
+	}
+}

@@ -1,0 +1,11 @@
+# local state / build artifacts — never commit
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+node_modules/
+*.exe
+*.db
+*.db-journal
+# NOTE: go.sum IS committed — it is the dependency lockfile a fresh clone needs to build.

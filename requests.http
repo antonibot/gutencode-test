@@ -1,0 +1,1100 @@
+# requests.http — every route, clickable.
+#   VS Code: install the REST Client extension (humao.rest-client) · JetBrains IDEs: built in.
+#   Start the app first:  python dev.py   (serves on :8080)
+#
+# 1) send 'register' once, then 'login' — the @token line below captures its access_token
+#    automatically (VS Code REST Client). JetBrains: send login, then paste the value into @token.
+# 2) every request below reuses {{token}}. The status in each comment is what the shipped contract
+#    expects in ITS test order — your data will differ, the shapes won't.
+
+@host = http://127.0.0.1:8080
+
+### ── start here — mint a real session token ──────────────────────────
+# @name register
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{"email": "alice@ex.com", "password": "correct horse"}
+
+###
+# @name login
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{"email": "alice@ex.com", "password": "correct horse"}
+
+###
+@token = {{login.response.body.access_token}}
+GET {{host}}/auth/me
+Authorization: Bearer {{token}}
+
+### ── admin — Identity & access ──────────────────────
+# POST /admin/actions  ·  the contract expects 201
+POST {{host}}/admin/actions
+Authorization: Bearer admin_dev_token_change_me
+Content-Type: application/json
+
+{"action": "deactivate_user", "target": "alice"}
+
+###
+# GET /admin/actions  ·  the contract expects 200
+GET {{host}}/admin/actions
+Authorization: Bearer admin_dev_token_change_me
+
+###
+# GET /admin/actions/{action_id}  ·  the contract expects 200
+GET {{host}}/admin/actions/1
+Authorization: Bearer admin_dev_token_change_me
+
+### ── api_keys — Identity & access ───────────────────
+# POST /api_keys  ·  the contract expects 201
+POST {{host}}/api_keys?now=1700000000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name": "ci", "scopes": ["read", "write"]}
+
+###
+# GET /api_keys  ·  the contract expects 200
+GET {{host}}/api_keys
+Authorization: Bearer {{token}}
+
+###
+# GET /api_keys/{key_id}  ·  the contract expects 200
+GET {{host}}/api_keys/1
+Authorization: Bearer {{token}}
+
+###
+# POST /api_keys/verify  ·  the contract expects 200
+POST {{host}}/api_keys/verify
+Content-Type: application/json
+
+{"key": "ak_nope_wrong"}
+
+###
+# POST /api_keys/{key_id}/rotate  ·  the contract expects 404
+POST {{host}}/api_keys/1/rotate
+Authorization: Bearer {{token}}
+
+###
+# POST /api_keys/{key_id}/revoke  ·  the contract expects 200
+POST {{host}}/api_keys/1/revoke
+Authorization: Bearer {{token}}
+
+### ── auth — Identity & access ───────────────────────
+# POST /auth/register  ·  the contract expects 200
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{"email": "alice@ex.com", "password": "correct horse"}
+
+###
+# POST /auth/login  ·  the contract expects 200
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{"email": "alice@ex.com", "password": "correct horse"}
+
+###
+# POST /auth/refresh  ·  the contract expects 401
+POST {{host}}/auth/refresh
+Content-Type: application/json
+
+{"token": "nope.nottoken"}
+
+###
+# POST /auth/logout  ·  the contract expects 200
+POST {{host}}/auth/logout
+Authorization: Bearer {{token}}
+
+###
+# POST /auth/password/reset/request  ·  the contract expects 200
+POST {{host}}/auth/password/reset/request
+Content-Type: application/json
+
+{"email": "alice@ex.com"}
+
+###
+# POST /auth/password/reset/confirm  ·  the contract expects 400
+POST {{host}}/auth/password/reset/confirm
+Content-Type: application/json
+
+{"token": "bad.token", "password": "a new good password"}
+
+###
+# POST /auth/verify/request  ·  the contract expects 200
+POST {{host}}/auth/verify/request
+Authorization: Bearer {{token}}
+
+###
+# POST /auth/verify/confirm  ·  the contract expects 400
+POST {{host}}/auth/verify/confirm
+Content-Type: application/json
+
+{"token": "bad.token"}
+
+###
+# GET /auth/me  ·  the contract expects 200
+GET {{host}}/auth/me
+Authorization: Bearer {{token}}
+
+### ── oauth — Identity & access ──────────────────────
+# POST /oauth/authorize  ·  the contract expects 201
+POST {{host}}/oauth/authorize
+Content-Type: application/json
+
+{"provider": "google", "state": "s1"}
+
+###
+# POST /oauth/callback  ·  the contract expects 200
+POST {{host}}/oauth/callback
+Content-Type: application/json
+
+{"provider": "google", "state": "s1", "code": "c1"}
+
+### ── rbac — Identity & access ───────────────────────
+# POST /rbac/roles  ·  the contract expects 201
+POST {{host}}/rbac/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"subject": "alice", "role": "viewer"}
+
+###
+# GET /rbac/can  ·  the contract expects 200
+GET {{host}}/rbac/can?permission=read
+Authorization: Bearer {{token}}
+
+###
+# POST /rbac/relations  ·  the contract expects 201
+POST {{host}}/rbac/relations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"subject": "u1", "relation": "owner", "object": "doc1"}
+
+###
+# GET /rbac/check  ·  the contract expects 200
+GET {{host}}/rbac/check?relation=owner&object=doc1
+Authorization: Bearer {{token}}
+
+###
+# DELETE /rbac/roles  ·  the contract expects 200
+DELETE {{host}}/rbac/roles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"subject": "alice", "role": "editor"}
+
+###
+# DELETE /rbac/relations  ·  the contract expects 200
+DELETE {{host}}/rbac/relations
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"subject": "u1", "relation": "owner", "object": "doc1"}
+
+###
+# GET /rbac/roles  ·  the contract expects 200
+GET {{host}}/rbac/roles
+Authorization: Bearer {{token}}
+
+###
+# GET /rbac/relations  ·  the contract expects 200
+GET {{host}}/rbac/relations?subject=carol
+Authorization: Bearer {{token}}
+
+###
+# GET /rbac/decisions  ·  the contract expects 200
+GET {{host}}/rbac/decisions
+Authorization: Bearer {{token}}
+
+### ── secrets_vault — Identity & access ──────────────
+# GET /secrets_vault  ·  the contract expects 200
+GET {{host}}/secrets_vault
+Authorization: Bearer {{token}}
+
+###
+# GET /secrets_vault/access  ·  the contract expects 200
+GET {{host}}/secrets_vault/access
+Authorization: Bearer {{token}}
+
+###
+# PUT /secrets_vault/{name}  ·  the contract expects 201
+PUT {{host}}/secrets_vault/db_password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"value": "hunter2"}
+
+###
+# GET /secrets_vault/{name}  ·  the contract expects 200
+GET {{host}}/secrets_vault/db_password
+Authorization: Bearer {{token}}
+
+###
+# POST /secrets_vault/{name}/reveal  ·  the contract expects 200
+POST {{host}}/secrets_vault/db_password/reveal
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+###
+# POST /secrets_vault/{name}/destroy  ·  the contract expects 200
+POST {{host}}/secrets_vault/rotated/destroy
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"version": 1}
+
+###
+# POST /secrets_vault/{name}/disable  ·  the contract expects 200
+POST {{host}}/secrets_vault/rotated/disable
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"version": 2}
+
+###
+# POST /secrets_vault/{name}/enable  ·  the contract expects 200
+POST {{host}}/secrets_vault/rotated/enable
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"version": 2}
+
+### ── users — Identity & access ──────────────────────
+# POST /users  ·  the contract expects 201
+POST {{host}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"handle": "alice", "display_name": "Alice A"}
+
+###
+# GET /users/{handle}  ·  the contract expects 200
+GET {{host}}/users/alice
+Authorization: Bearer {{token}}
+
+###
+# POST /users/{handle}/deactivate  ·  the contract expects 200
+POST {{host}}/users/alice/deactivate
+Authorization: Bearer {{token}}
+
+### ── invitations — Organizations & multi-tenancy ────
+# POST /invitations  ·  the contract expects 201
+POST {{host}}/invitations?now=1000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"email": "a@example.com"}
+
+###
+# POST /invitations/{token}/accept  ·  the contract expects 404
+POST {{host}}/invitations/unknown-token/accept?now=3000
+
+### ── orgs — Organizations & multi-tenancy ───────────
+# POST /orgs  ·  the contract expects 201
+POST {{host}}/orgs
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"slug": "acme"}
+
+###
+# GET /orgs  ·  the contract expects 200
+GET {{host}}/orgs
+Authorization: Bearer {{token}}
+
+###
+# GET /orgs/{slug}  ·  the contract expects 200
+GET {{host}}/orgs/acme
+Authorization: Bearer {{token}}
+
+###
+# POST /orgs/{slug}/transfer  ·  the contract expects 200
+POST {{host}}/orgs/acme/transfer
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"owner": "bob"}
+
+###
+# POST /orgs/{slug}/archive  ·  the contract expects 200
+POST {{host}}/orgs/acme/archive
+Authorization: Bearer {{token}}
+
+###
+# POST /orgs/{slug}/members  ·  the contract expects 201
+POST {{host}}/orgs/acme/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"handle": "bob", "role": "admin"}
+
+###
+# GET /orgs/{slug}/members  ·  the contract expects 200
+GET {{host}}/orgs/listorg/members
+Authorization: Bearer {{token}}
+
+###
+# POST /orgs/{slug}/members/accept  ·  the contract expects 404
+POST {{host}}/orgs/acme/members/accept
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"token": "no.invite"}
+
+###
+# DELETE /orgs/{slug}/members/{handle}  ·  the contract expects 200
+DELETE {{host}}/orgs/acme/members/dave
+Authorization: Bearer {{token}}
+
+###
+# GET /orgs/{slug}/invitations  ·  the contract expects 200
+GET {{host}}/orgs/listorg/invitations
+Authorization: Bearer {{token}}
+
+###
+# POST /orgs/{slug}/leave  ·  the contract expects 200
+POST {{host}}/orgs/listorg/leave
+Authorization: Bearer {{token}}
+
+### ── teams — Organizations & multi-tenancy ──────────
+# POST /teams  ·  the contract expects 201
+POST {{host}}/teams
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"org": "teamco", "name": "platform"}
+
+###
+# GET /teams/{team_id}  ·  the contract expects 200
+GET {{host}}/teams/1
+Authorization: Bearer {{token}}
+
+###
+# POST /teams/{team_id}/members  ·  the contract expects 200
+POST {{host}}/teams/1/members
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"handle": "alice", "role": "lead"}
+
+###
+# DELETE /teams/{team_id}/members/{handle}  ·  the contract expects 200
+DELETE {{host}}/teams/1/members/alice
+Authorization: Bearer {{token}}
+
+### ── tenancy — Organizations & multi-tenancy ────────
+# POST /tenancy/notes  ·  the contract expects 201
+POST {{host}}/tenancy/notes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"body": "alpha"}
+
+###
+# GET /tenancy/notes  ·  the contract expects 200
+GET {{host}}/tenancy/notes
+Authorization: Bearer {{token}}
+
+###
+# GET /tenancy/notes/{note_id}  ·  the contract expects 200
+GET {{host}}/tenancy/notes/1
+Authorization: Bearer {{token}}
+
+### ── billing — Money & billing ──────────────────────
+# POST /billing/subscriptions  ·  the contract expects 201
+POST {{host}}/billing/subscriptions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"plan": "pro"}
+
+###
+# GET /billing/subscriptions/{sub_id}  ·  the contract expects 200
+GET {{host}}/billing/subscriptions/1
+Authorization: Bearer {{token}}
+
+###
+# POST /billing/subscriptions/{sub_id}/cancel  ·  the contract expects 200
+POST {{host}}/billing/subscriptions/1/cancel
+Authorization: Bearer {{token}}
+
+### ── invoices — Money & billing ─────────────────────
+# POST /invoices  ·  the contract expects 201
+POST {{host}}/invoices
+Authorization: Bearer {{token}}
+Idempotency-Key: K1
+Content-Type: application/json
+
+{"customer": "acme", "currency": "usd", "tax": 100, "line_items": [{"description": "widget", "quantity": 3, "unit_amount": 500}, {"description": "setup fee", "quantity": 1, "unit_amount": 1000}]}
+
+###
+# GET /invoices  ·  the contract expects 200
+GET {{host}}/invoices
+Authorization: Bearer {{token}}
+
+###
+# GET /invoices/{invoice_id}  ·  the contract expects 404
+GET {{host}}/invoices/nope
+Authorization: Bearer {{token}}
+
+###
+# PATCH /invoices/{invoice_id}  ·  the contract expects 404
+PATCH {{host}}/invoices/nope
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"customer": "acme", "currency": "usd", "tax": 0, "line_items": [{"description": "x", "quantity": 1, "unit_amount": 5}]}
+
+###
+# POST /invoices/{invoice_id}/finalize  ·  the contract expects 404
+POST {{host}}/invoices/nope/finalize
+Authorization: Bearer {{token}}
+
+###
+# POST /invoices/{invoice_id}/pay  ·  the contract expects 404
+POST {{host}}/invoices/nope/pay
+Authorization: Bearer {{token}}
+
+###
+# POST /invoices/{invoice_id}/void  ·  the contract expects 404
+POST {{host}}/invoices/nope/void
+Authorization: Bearer {{token}}
+
+###
+# POST /invoices/{invoice_id}/mark_uncollectible  ·  the contract expects 404
+POST {{host}}/invoices/nope/mark_uncollectible
+Authorization: Bearer {{token}}
+
+### ── ledger — Money & billing ───────────────────────
+# POST /ledger/transactions  ·  the contract expects 201
+POST {{host}}/ledger/transactions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"entries": [{"account_id": 1, "amount": 100}, {"account_id": 2, "amount": -100}]}
+
+###
+# GET /ledger/accounts/{account_id}/balance  ·  the contract expects 200
+GET {{host}}/ledger/accounts/1/balance
+Authorization: Bearer {{token}}
+
+### ── llm_usage — Money & billing ────────────────────
+# POST /llm_usage/events  ·  the contract expects 201
+POST {{host}}/llm_usage/events
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"identifier": "c1", "provider": "openai", "model": "gpt-4o", "input_tokens": 1000, "output_tokens": 500}
+
+###
+# GET /llm_usage/summary  ·  the contract expects 200
+GET {{host}}/llm_usage/summary
+Authorization: Bearer {{token}}
+
+###
+# GET /llm_usage/events  ·  the contract expects 200
+GET {{host}}/llm_usage/events
+Authorization: Bearer {{token}}
+
+### ── payments — Money & billing ─────────────────────
+# POST /payments  ·  the contract expects 201
+POST {{host}}/payments
+Authorization: Bearer {{token}}
+Idempotency-Key: K1
+Content-Type: application/json
+
+{"amount": 2000, "currency": "usd"}
+
+###
+# GET /payments  ·  the contract expects 200
+GET {{host}}/payments
+Authorization: Bearer {{token}}
+
+###
+# GET /payments/{payment_id}  ·  the contract expects 404
+GET {{host}}/payments/nope
+Authorization: Bearer {{token}}
+
+###
+# POST /payments/{payment_id}/capture  ·  the contract expects 404
+POST {{host}}/payments/nope/capture
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"amount": 100}
+
+###
+# POST /payments/{payment_id}/void  ·  the contract expects 404
+POST {{host}}/payments/nope/void
+Authorization: Bearer {{token}}
+
+###
+# POST /payments/{payment_id}/refund  ·  the contract expects 404
+POST {{host}}/payments/nope/refund
+Authorization: Bearer {{token}}
+Idempotency-Key: RF
+Content-Type: application/json
+
+{"amount": 100}
+
+### ── stripe — Money & billing ───────────────────────
+# POST /stripe/charges  ·  the contract expects 201
+POST {{host}}/stripe/charges
+Authorization: Bearer {{token}}
+Idempotency-Key: K1
+Content-Type: application/json
+
+{"amount": 2000, "currency": "usd"}
+
+###
+# POST /stripe/webhook  ·  the contract expects 200
+POST {{host}}/stripe/webhook?now=1000
+Stripe-Signature: t=1000,v1=ae8b1bac46e4eecdb3d6f4e8fc7859a9e96aaee141bb95aba75dcb2c47385266
+Content-Type: application/json
+
+{"type": "payment_succeeded"}
+
+### ── agent — AI & agents ────────────────────────────
+# POST /agents/  ·  the contract expects 201
+POST {{host}}/agents/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name": "helper", "system_prompt": "be helpful"}
+
+###
+# POST /agents/{agent_id}/sessions  ·  the contract expects 201
+POST {{host}}/agents/1/sessions
+Authorization: Bearer {{token}}
+
+###
+# POST /agents/{agent_id}/sessions/{session_id}/run  ·  the contract expects 200
+POST {{host}}/agents/1/sessions/1/run
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"input": "use calc 2+2"}
+
+###
+# GET /agents/{agent_id}/sessions/{session_id}/messages  ·  the contract expects 200
+GET {{host}}/agents/1/sessions/1/messages
+Authorization: Bearer {{token}}
+
+### ── ai_memory — AI & agents ────────────────────────
+# POST /ai_memory/memories  ·  the contract expects 201
+POST {{host}}/ai_memory/memories?now=1000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"content": "hello world", "scope": "work"}
+
+###
+# GET /ai_memory/memories  ·  the contract expects 200
+GET {{host}}/ai_memory/memories?scope=nonesuch
+Authorization: Bearer {{token}}
+
+###
+# GET /ai_memory/memories/{id}  ·  the contract expects 404
+GET {{host}}/ai_memory/memories/999999
+Authorization: Bearer {{token}}
+
+###
+# DELETE /ai_memory/memories/{id}  ·  the contract expects 404
+DELETE {{host}}/ai_memory/memories/999999
+Authorization: Bearer {{token}}
+
+###
+# DELETE /ai_memory/memories  ·  the contract expects 204
+DELETE {{host}}/ai_memory/memories?scope=del
+Authorization: Bearer {{token}}
+
+### ── ai_provider — AI & agents ──────────────────────
+# POST /ai/complete  ·  the contract expects 200
+POST {{host}}/ai/complete
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"prompt": "hello"}
+
+###
+# GET /ai/usage  ·  the contract expects 200
+GET {{host}}/ai/usage
+Authorization: Bearer {{token}}
+
+### ── ai_tools — AI & agents ─────────────────────────
+# GET /tools  ·  the contract expects 200
+GET {{host}}/tools
+
+###
+# POST /tools/{tool_name}/invoke  ·  the contract expects 200
+POST {{host}}/tools/upper/invoke
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"args": {"text": "hello"}}
+
+### ── ai_workflow — AI & agents ──────────────────────
+# POST /workflows  ·  the contract expects 201
+POST {{host}}/workflows
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"steps": [{"op": "append", "text": " world"}, {"op": "prepend", "text": ">> "}, {"op": "length"}]}
+
+###
+# POST /workflows/{workflow_id}/run  ·  the contract expects 200
+POST {{host}}/workflows/1/run
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"input": "hello"}
+
+### ── chat_threads — AI & agents ─────────────────────
+# POST /chat_threads  ·  the contract expects 201
+POST {{host}}/chat_threads?now=1000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "Support chat"}
+
+###
+# GET /chat_threads  ·  the contract expects 200
+GET {{host}}/chat_threads
+Authorization: Bearer {{token}}
+
+###
+# GET /chat_threads/{id}  ·  the contract expects 200
+GET {{host}}/chat_threads/1
+Authorization: Bearer {{token}}
+
+###
+# PATCH /chat_threads/{id}  ·  the contract expects 200
+PATCH {{host}}/chat_threads/2?now=2000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "Renamed"}
+
+###
+# DELETE /chat_threads/{id}  ·  the contract expects 204
+DELETE {{host}}/chat_threads/5
+Authorization: Bearer {{token}}
+
+###
+# POST /chat_threads/{id}/messages  ·  the contract expects 201
+POST {{host}}/chat_threads/1/messages?now=1010
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"role": "user", "content": "Hi, my invoice looks wrong"}
+
+###
+# GET /chat_threads/{id}/messages  ·  the contract expects 200
+GET {{host}}/chat_threads/1/messages
+Authorization: Bearer {{token}}
+
+### ── crew — AI & agents ─────────────────────────────
+# POST /crews  ·  the contract expects 201
+POST {{host}}/crews
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"roles": [{"name": "writer", "next": "editor"}, {"name": "editor"}]}
+
+###
+# POST /crews/{crew_id}/run  ·  the contract expects 200
+POST {{host}}/crews/1/run
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"input": "draft"}
+
+### ── evals — AI & agents ────────────────────────────
+# POST /evals/suites  ·  the contract expects 201
+POST {{host}}/evals/suites?now=1700000000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name": "greet", "cases": [{"id": "c_exact", "scorer": "exact", "expected": "hello"}, {"id": "c_contains", "scorer": "contains", "expected": "lo wor"}, {"id": "c_starts", "scorer": "starts_with", "expected": "hel"}, {"id": "c_ends", "scorer": "ends_with", "expected": "rld"}, {"id": "c_iexact", "scorer": "iexact", "expected": "HELLO"}, {"id": "c_icontains", "scorer": "icontains", "expected": "WORLD"}, {"id": "c_int", "scorer": "equals_int", "expected": "42"}]}
+
+###
+# GET /evals/suites  ·  the contract expects 200
+GET {{host}}/evals/suites
+Authorization: Bearer {{token}}
+
+###
+# GET /evals/suites/{name}  ·  the contract expects 200
+GET {{host}}/evals/suites/greet
+Authorization: Bearer {{token}}
+
+###
+# POST /evals/suites/{name}/score  ·  the contract expects 200
+POST {{host}}/evals/suites/greet/score
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"outputs": {"c_exact": "hello", "c_contains": "hello world", "c_starts": "hello", "c_ends": "hello world", "c_iexact": "hello", "c_icontains": "hello world", "c_int": "42"}}
+
+### ── prompt_registry — AI & agents ──────────────────
+# POST /prompt_registry/prompts/{name}/versions  ·  the contract expects 201
+POST {{host}}/prompt_registry/prompts/greeting/versions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"template": "Hello {{name}}!"}
+
+###
+# GET /prompt_registry/prompts/{name}/versions/{version}  ·  the contract expects 200
+GET {{host}}/prompt_registry/prompts/greeting/versions/1
+Authorization: Bearer {{token}}
+
+###
+# GET /prompt_registry/prompts  ·  the contract expects 200
+GET {{host}}/prompt_registry/prompts
+Authorization: Bearer {{token}}
+
+###
+# GET /prompt_registry/prompts/{name}  ·  the contract expects 200
+GET {{host}}/prompt_registry/prompts/greeting
+Authorization: Bearer {{token}}
+
+###
+# PUT /prompt_registry/prompts/{name}/labels/{label}  ·  the contract expects 200
+PUT {{host}}/prompt_registry/prompts/greeting/labels/production
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"version": 2}
+
+###
+# POST /prompt_registry/prompts/{name}/render  ·  the contract expects 200
+POST {{host}}/prompt_registry/prompts/greeting/render
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"version": 1, "data": {"name": "Ada"}}
+
+### ── rag — AI & agents ──────────────────────────────
+# POST /rag/documents  ·  the contract expects 201
+POST {{host}}/rag/documents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"doc_id": "d1", "text": "the quick brown fox jumps over the lazy dog"}
+
+###
+# POST /rag/query  ·  the contract expects 200
+POST {{host}}/rag/query
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"query": "the quick brown fox jumps over the lazy dog"}
+
+### ── vectorstore — AI & agents ──────────────────────
+# POST /vectors  ·  the contract expects 201
+POST {{host}}/vectors
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"id": "d1", "text": "the quick brown fox"}
+
+###
+# POST /vectors/query  ·  the contract expects 200
+POST {{host}}/vectors/query
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"query": "the quick brown fox"}
+
+### ── file_store — Data & content ────────────────────
+# POST /file_store  ·  the contract expects 201
+POST {{host}}/file_store?now=1000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"key": "hello.txt", "content_b64": "aGVsbG8gd29ybGQ="}
+
+###
+# GET /file_store  ·  the contract expects 200
+GET {{host}}/file_store
+Authorization: Bearer {{token}}
+
+###
+# GET /file_store/{file_key}/meta  ·  the contract expects 200
+GET {{host}}/file_store/hello.txt/meta
+Authorization: Bearer {{token}}
+
+###
+# GET /file_store/{file_key}  ·  the contract expects 200
+GET {{host}}/file_store/hello.txt
+Authorization: Bearer {{token}}
+
+###
+# DELETE /file_store/{file_key}  ·  the contract expects 204
+DELETE {{host}}/file_store/shared
+Authorization: Bearer {{token}}
+
+### ── records — Data & content ───────────────────────
+# POST /records  ·  the contract expects 201
+POST {{host}}/records?now=1700000000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"key": "alpha-1", "fields": {"title": "alpha"}}
+
+###
+# GET /records  ·  the contract expects 200
+GET {{host}}/records
+Authorization: Bearer {{token}}
+
+###
+# GET /records/{record_id}  ·  the contract expects 200
+GET {{host}}/records/fcc198e9899df0bd2eb5791ab7454638d5c0ef3717763ce18e5faa2fef546d39
+Authorization: Bearer {{token}}
+
+###
+# PATCH /records/{record_id}  ·  the contract expects 200
+PATCH {{host}}/records/fcc198e9899df0bd2eb5791ab7454638d5c0ef3717763ce18e5faa2fef546d39?now=1700000100
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"fields": {"count": 9, "status": "open"}}
+
+###
+# DELETE /records/{record_id}  ·  the contract expects 204
+DELETE {{host}}/records/ba32a5c47c5a1d6582c2dd526372ca236eda371ff2d8c091b05e5b36097bb845
+Authorization: Bearer {{token}}
+
+### ── reporting — Data & content ─────────────────────
+# POST /reporting/facts  ·  the contract expects 201
+POST {{host}}/reporting/facts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"dataset": "deals", "key": "d2", "dimensions": {"stage": "won", "region": "us"}, "measures": {"value": 250, "count": 1}}
+
+###
+# GET /reporting/facts  ·  the contract expects 200
+GET {{host}}/reporting/facts?dataset=temp
+Authorization: Bearer {{token}}
+
+###
+# POST /reporting/query  ·  the contract expects 200
+POST {{host}}/reporting/query
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"dataset": "deals", "group_by": [], "aggregate": [{"op": "count"}, {"op": "sum", "field": "value", "as": "total"}, {"op": "min", "field": "value", "as": "lo"}, {"op": "max", "field": "value", "as": "hi"}]}
+
+###
+# DELETE /reporting/facts  ·  the contract expects 200
+DELETE {{host}}/reporting/facts?dataset=temp&region=eu
+Authorization: Bearer {{token}}
+
+### ── search — Data & content ────────────────────────
+# POST /search/index  ·  the contract expects 201
+POST {{host}}/search/index
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"id": 1, "text": "The quick brown fox"}
+
+###
+# GET /search/query  ·  the contract expects 200
+GET {{host}}/search/query
+Authorization: Bearer {{token}}
+
+### ── settings — Data & content ──────────────────────
+# GET /settings  ·  the contract expects 200
+GET {{host}}/settings
+Authorization: Bearer {{token}}
+
+###
+# GET /settings/{key}  ·  the contract expects 200
+GET {{host}}/settings/theme
+Authorization: Bearer {{token}}
+
+###
+# PUT /settings/{key}  ·  the contract expects 200
+PUT {{host}}/settings/theme
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"value": "dark"}
+
+### ── storage — Data & content ───────────────────────
+# POST /storage  ·  the contract expects 201
+POST {{host}}/storage
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"key": "a.txt", "content": "hello world"}
+
+###
+# GET /storage  ·  the contract expects 200
+GET {{host}}/storage
+Authorization: Bearer {{token}}
+
+###
+# GET /storage/{object_key}  ·  the contract expects 200
+GET {{host}}/storage/a.txt
+Authorization: Bearer {{token}}
+
+###
+# DELETE /storage/{object_key}  ·  the contract expects 204
+DELETE {{host}}/storage/a.txt
+Authorization: Bearer {{token}}
+
+### ── audit_log — Platform & reliability ─────────────
+# POST /audit_log/events  ·  the contract expects 201
+POST {{host}}/audit_log/events?now=1700000000
+Authorization: Bearer service_dev_token_change_me
+Content-Type: application/json
+
+{"actor": "alice", "action": "user_login"}
+
+###
+# GET /audit_log/events  ·  the contract expects 200
+GET {{host}}/audit_log/events
+Authorization: Bearer {{token}}
+
+###
+# GET /audit_log/verify  ·  the contract expects 200
+GET {{host}}/audit_log/verify
+
+### ── email_outbox — Platform & reliability ──────────
+# POST /email_outbox/messages  ·  the contract expects 201
+POST {{host}}/email_outbox/messages
+Authorization: Bearer {{token}}
+Idempotency-Key: k1
+Content-Type: application/json
+
+{"from": "s@x.com", "to": ["a@x.com"], "subject": "Hi", "text": "body"}
+
+###
+# GET /email_outbox/messages  ·  the contract expects 200
+GET {{host}}/email_outbox/messages
+Authorization: Bearer {{token}}
+
+###
+# GET /email_outbox/messages/{message_id}  ·  the contract expects 200
+GET {{host}}/email_outbox/messages/1
+Authorization: Bearer {{token}}
+
+### ── feature_flags — Platform & reliability ─────────
+# POST /feature_flags  ·  the contract expects 201
+POST {{host}}/feature_flags
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"key": "dark_mode", "rollout": 50}
+
+###
+# GET /feature_flags/{key}  ·  the contract expects 200
+GET {{host}}/feature_flags/dark_mode
+
+###
+# PUT /feature_flags/{key}  ·  the contract expects 200
+PUT {{host}}/feature_flags/dark_mode
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"rollout": 31}
+
+###
+# GET /feature_flags/{key}/evaluate  ·  the contract expects 200
+GET {{host}}/feature_flags/dark_mode/evaluate?subject=bob
+
+### ── health — Platform & reliability ────────────────
+# GET /health  ·  the contract expects 200
+GET {{host}}/health
+
+### ── idempotency — Platform & reliability ───────────
+# POST /idempotency/payments  ·  the contract expects 201
+POST {{host}}/idempotency/payments
+Authorization: Bearer {{token}}
+Idempotency-Key: K1
+Content-Type: application/json
+
+{"amount": 500}
+
+### ── job_queue — Platform & reliability ─────────────
+# POST /job_queue  ·  the contract expects 201
+POST {{host}}/job_queue?now=1000
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"kind": "email", "payload": {"to": "a@x"}}
+
+###
+# POST /job_queue/claim  ·  the contract expects 204
+POST {{host}}/job_queue/claim?now=500
+Authorization: Bearer service_dev_token_change_me
+
+###
+# POST /job_queue/{job_id}/complete  ·  the contract expects 401
+POST {{host}}/job_queue/1/complete
+Content-Type: application/json
+
+{"lease_token": "x"}
+
+###
+# POST /job_queue/{job_id}/fail  ·  the contract expects 409
+POST {{host}}/job_queue/1/fail?now=2000
+Authorization: Bearer service_dev_token_change_me
+Content-Type: application/json
+
+{"lease_token": "wrongtoken"}
+
+###
+# GET /job_queue  ·  the contract expects 200
+GET {{host}}/job_queue
+Authorization: Bearer {{token}}
+
+###
+# GET /job_queue/{job_id}  ·  the contract expects 200
+GET {{host}}/job_queue/1
+Authorization: Bearer {{token}}
+
+### ── notifications — Platform & reliability ─────────
+# POST /notifications  ·  the contract expects 201
+POST {{host}}/notifications
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"to": "alice", "message": "hello there"}
+
+###
+# GET /notifications  ·  the contract expects 200
+GET {{host}}/notifications
+Authorization: Bearer {{token}}
+
+###
+# POST /notifications/{note_id}/read  ·  the contract expects 200
+POST {{host}}/notifications/1/read
+Authorization: Bearer {{token}}
+
+### ── ratelimit — Platform & reliability ─────────────
+# POST /ratelimit/check  ·  the contract expects 200
+POST {{host}}/ratelimit/check?now=1000
+Authorization: Bearer service_dev_token_change_me
+Content-Type: application/json
+
+{"key": "alice"}
+
+### ── webhooks — Platform & reliability ──────────────
+# POST /webhooks/send  ·  the contract expects 201
+POST {{host}}/webhooks/send?payload=hello&now=1000
+Authorization: Bearer {{token}}
+
+###
+# POST /webhooks/verify  ·  the contract expects 200
+POST {{host}}/webhooks/verify?now=1000
+Content-Type: application/json
+
+{"id": "msg_1", "timestamp": 1000, "payload": "hello", "signature": "v1,8lqOZj/heprTfB0FfT9CkaLbP8zi2OiioCncHVBtA14="}

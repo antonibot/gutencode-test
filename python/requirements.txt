@@ -1,0 +1,20 @@
+# fastapi + starlette are pinned EXACTLY — they are tightly coupled and a MISMATCH silently drops routes. NEWER
+# fastapi (0.137+) declares `starlette>=0.46.0` with NO upper bound, so a fresh `pip install` pulls the latest
+# fastapi against the new starlette 1.x major, and THAT pair's `include_router` drops routes — observed: every
+# DELETE route vanishes from the live app while go/node keep all 169 (a false RED on code/routes-python). fastapi
+# 0.115.6 instead declares `starlette>=0.40.0,<0.42.0` (properly bounded), so the broken 1.x can never be pulled;
+# this exact, mature pre-1.x pair is validated — all 11 DELETE routes register on a clean install. Bump BOTH
+# together (fastapi to a release whose starlette bound is closed, + a matching starlette) and re-verify to upgrade.
+fastapi==0.115.6
+starlette==0.41.3
+pydantic>=2.9,<3.0
+uvicorn[standard]>=0.30,<1.0
+httpx>=0.27,<1.0
+pytest>=8.0,<9.0
+# OPTIONAL — only if you set DATABASE_URL=postgres://… (Supabase or any Postgres). The default install is SQLite,
+# zero extra deps. Commented so the deps allowlist stays "zero new deps"; uncomment to enable the Postgres backend:
+# psycopg[binary]>=3.2,<4
+# OPTIONAL — only if you set SECRETS_VAULT_KEK to turn ON at-rest encryption for secrets_vault (AES-256-GCM). The
+# default (KEK unset) needs NO crypto dep; go/node seal with stdlib. Commented so the deps allowlist stays "zero new
+# deps"; uncomment to seal secrets at rest:
+# cryptography>=42,<49

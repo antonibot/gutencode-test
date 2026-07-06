@@ -1,0 +1,12 @@
+{
+ "mcpServers": {
+  "spine": {
+   "command": "python",
+   "args": ["mcp_server.py"],
+   "env": {
+    "MCP_BASE_URL": "http://127.0.0.1:8080",
+    "MCP_BEARER": ""
+   }
+  }
+ }
+}

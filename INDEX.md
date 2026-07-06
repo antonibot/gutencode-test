@@ -1,0 +1,330 @@
+# INDEX.md — every file, one line
+- `README.md` — what this is + quickstart per language
+- `AGENT.md` — the agent operating law
+- `CUSTOMIZE.md` — where your unique logic goes
+- `INDEX.md` — this file
+- `HELPERS.md` — the core/parts helper API per language: identity, the store, errors, validation, pagination, signing, the clock
+- `PRD_TEMPLATE.md` — spec -> build -> test -> review framework for adding a feature
+- `FRONTEND.md` — wiring a UI to this backend: one API client, safe retries with backoff, loading/error/empty states (no blank-screen bug), types mirrored from the contract
+- `SINGLE_LANGUAGE.md` — using only one of the three languages (both supported postures)
+- `INTEROP.md` — the provider seams: where the offline defaults end and real providers plug in
+- `.env.example` — every configuration knob
+- `.gitignore` — local-artifact ignores (go.sum ships)
+- `.gitattributes` — forces LF on checkout (byte-exact baseline on every OS)
+- `DEPLOY.md` — the paved road to a live URL: Dockerfiles, compose, CI, Railway/Render/Fly/VPS, go-live checklist
+- `SECURITY.md` — what's enforced (proven x3), the dangerous defaults to rotate before prod, known limits, how to report a vuln
+- `docker-compose.yml` — local prod-sim — pick a language profile; optional Postgres service
+- `.github/workflows/verify.yml` — CI: re-runs the shipped verifier (plus a Postgres durability job) on every push
+- `scripts/grant_admin.py` — seed the first application admin role for a registered account (SQLite or Postgres)
+- `scripts/read_outbox.py` — DEV: read the verify/reset/invite tokens the app 'emails' (from the store) to close the auth loop locally
+- `TOUR.md` — the 10-minute walkthrough: alive -> sign up -> create -> AI -> money -> prove it
+- `requests.http` — every route as a clickable request (VS Code REST Client / JetBrains HTTP client)
+- `dev.py` — one command to a running backend on :8080 (picks a runtime; also: verify / seed)
+- `mcp_server.py` — the MCP server: every verified route as a native tool for your coding agent (stdio, reads .gutencode/contract.json at launch)
+- `.mcp.json` — drop-in MCP client config (Claude Code / Cursor / Windsurf) — approval-gated by the client
+- `scripts/seed.py` — demo data through the public API of a RUNNING app (re-runnable, no test knobs)
+- `REPO_SETUP.md` — the GitHub storefront checklist: badge, description, topics, social preview, release
+- `.devcontainer/devcontainer.json` — Codespaces/Dev Containers: all three toolchains + REST Client preinstalled
+- `verify.py` — the offline verifier (baseline + suites + invariants + routes)
+- `check-baseline.js` — offline integrity check, node runtime — no Python needed
+- `check-baseline.go` — offline integrity check, go runtime — no Python needed
+- `.gutencode/manifest.json` — the printed baseline (file -> sha256)
+- `.gutencode/contract.json` — the map: domains, routes, test contract
+- `.gutencode/accepted.json` — acknowledged edits (starts empty [])
+- `.gutencode/extensions.json` — routes you added (starts empty []) — keeps code/routes green
+- `tests/invariants/admin_test.py` — correctness proofs: admin-only actions behind a bearer token, every action logged immutably
+- `tests/invariants/agent_test.py` — correctness proofs: AI agent runtime — sessions, tool calls, and a bounded run loop that always stops
+- `tests/invariants/ai_memory_test.py` — correctness proofs: long-term agent memory with TTL, size caps, and per-user isolation
+- `tests/invariants/ai_provider_test.py` — correctness proofs: one LLM gateway for completions — caching, usage metering, swappable providers
+- `tests/invariants/ai_tools_test.py` — correctness proofs: a typed tool registry agents call over HTTP — arguments validated, errors contained
+- `tests/invariants/ai_workflow_test.py` — correctness proofs: multi-step AI pipelines that always terminate — failures return a trace, not a crash
+- `tests/invariants/api_keys_test.py` — correctness proofs: issue, verify, rotate, and revoke scoped API keys — secrets hashed, shown only once
+- `tests/invariants/audit_log_test.py` — correctness proofs: append-only, hash-chained audit trail — tampering is detectable
+- `tests/invariants/auth_test.py` — correctness proofs: email/password auth with sessions, refresh, logout, password reset, and verification
+- `tests/invariants/billing_test.py` — correctness proofs: subscription billing — plans from a fixed catalog, prices never client-set
+- `tests/invariants/chat_threads_test.py` — correctness proofs: durable chat threads with ordered message history, per-user isolation, and size caps
+- `tests/invariants/crew_test.py` — correctness proofs: multi-agent orchestration — handoffs always terminate, even when roles loop
+- `tests/invariants/email_outbox_test.py` — correctness proofs: outbound email with exactly-once sends and header-injection protection
+- `tests/invariants/evals_test.py` — correctness proofs: score model outputs against frozen golden suites — deterministic and offline
+- `tests/invariants/feature_flags_test.py` — correctness proofs: feature flags with deterministic percentage rollout — no flapping mid-ramp
+- `tests/invariants/file_store_test.py` — correctness proofs: store and serve real file bytes with per-user quotas and content-addressed etags
+- `tests/invariants/idempotency_test.py` — correctness proofs: replay-safe writes via Idempotency-Key — a retry can never double-charge
+- `tests/invariants/invitations_test.py` — correctness proofs: invite + accept flow with single-use, expiring tokens
+- `tests/invariants/invoices_test.py` — correctness proofs: multi-line invoices — totals always recomputed server-side, never client-set
+- `tests/invariants/job_queue_test.py` — correctness proofs: background job queue with leases, retries with backoff, and dead-lettering
+- `tests/invariants/ledger_test.py` — correctness proofs: double-entry ledger — every transaction balances, balances are derived
+- `tests/invariants/llm_usage_test.py` — correctness proofs: per-call LLM token and cost metering — server-priced, deduplicated, integer-exact
+- `tests/invariants/notifications_test.py` — correctness proofs: in-app notifications with forgery-proof senders and read-state
+- `tests/invariants/oauth_test.py` — correctness proofs: OAuth 2.0 authorization-code flow (server side)
+- `tests/invariants/orgs_test.py` — correctness proofs: organizations/workspaces with roles, member invites, and exactly one owner
+- `tests/invariants/payments_test.py` — correctness proofs: provider-agnostic payment intents with idempotent, race-safe creation
+- `tests/invariants/prompt_registry_test.py` — correctness proofs: versioned, immutable prompt templates with movable labels and safe {{var}} rendering
+- `tests/invariants/rag_test.py` — correctness proofs: retrieval pipeline — chunk, embed, rank, and cite over each user's own documents
+- `tests/invariants/ratelimit_test.py` — correctness proofs: fixed-window rate limiting that holds under concurrent processes
+- `tests/invariants/rbac_test.py` — correctness proofs: role-based access control — deny by default, admin-gated changes
+- `tests/invariants/records_test.py` — correctness proofs: typed, owner-scoped CRUD records — the substrate to model your app's objects on
+- `tests/invariants/reporting_test.py` — correctness proofs: owner-scoped analytics — ingest facts, run group-by rollups with exact sums
+- `tests/invariants/search_test.py` — correctness proofs: token full-text search over each user's own documents
+- `tests/invariants/secrets_vault_test.py` — correctness proofs: versioned secret storage — reveal-once reads, irreversible destroy, access audit
+- `tests/invariants/settings_test.py` — correctness proofs: owner-scoped settings with a fixed, typed schema
+- `tests/invariants/storage_test.py` — correctness proofs: object storage behind a swappable provider — per-user keys, content-addressed etags
+- `tests/invariants/stripe_test.py` — correctness proofs: Stripe-compatible charges and webhook verification with secret rotation
+- `tests/invariants/teams_test.py` — correctness proofs: teams within an org — managed only by that org's owners and admins
+- `tests/invariants/tenancy_test.py` — correctness proofs: tenant isolation — another tenant's rows are invisible, not just forbidden
+- `tests/invariants/users_test.py` — correctness proofs: user profiles + lifecycle, separate from auth credentials
+- `tests/invariants/vectorstore_test.py` — correctness proofs: embedding index + top-k cosine retrieval — per-user and deterministic
+- `tests/invariants/webhooks_test.py` — correctness proofs: signed outbound + verified inbound webhooks with secret rotation and replay dedup
+
+## python/
+- `python/Dockerfile` — container image: non-root, port 8080, binds 0.0.0.0, /data volume
+- `python/app_pkg/__init__.py` — package marker
+- `python/app_pkg/app.py` — wiring: routers + the problem+json handlers
+- `python/app_pkg/core/__init__.py` — package marker
+- `python/app_pkg/core/clock.py` — test-clock seam (real time in production)
+- `python/app_pkg/core/errors.py` — the RFC 9457 error envelope
+- `python/app_pkg/core/store.py` — durable KV + counters
+- `python/app_pkg/core/store_factory.py` — app source
+- `python/app_pkg/core/store_postgres.py` — app source
+- `python/app_pkg/core/store_sqlite.py` — app source
+- `python/app_pkg/core/usage.py` — app source
+- `python/app_pkg/domains/__init__.py` — package marker
+- `python/app_pkg/domains/admin.py` — admin-only actions behind a bearer token, every action logged immutably
+- `python/app_pkg/domains/agent/__init__.py` — agent: package entry
+- `python/app_pkg/domains/agent/config.py` — agent: the config module
+- `python/app_pkg/domains/agent/models.py` — agent: the models module
+- `python/app_pkg/domains/agent/ports.py` — agent: the ports module
+- `python/app_pkg/domains/agent/providers/__init__.py` — agent: package entry
+- `python/app_pkg/domains/agent/providers/factory.py` — agent: the factory module
+- `python/app_pkg/domains/agent/providers/fake.py` — agent: the fake module
+- `python/app_pkg/domains/agent/providers/real.py` — agent: the real module
+- `python/app_pkg/domains/agent/router.py` — agent: the router module
+- `python/app_pkg/domains/agent/runtime.py` — agent: the runtime module
+- `python/app_pkg/domains/agent/tools/__init__.py` — agent: package entry
+- `python/app_pkg/domains/agent/tools/builtin.py` — agent: the builtin module
+- `python/app_pkg/domains/agent/tools/registry.py` — agent: the registry module
+- `python/app_pkg/domains/ai_memory/__init__.py` — ai_memory: package entry
+- `python/app_pkg/domains/ai_memory/router.py` — ai_memory: the router module
+- `python/app_pkg/domains/ai_provider.py` — one LLM gateway for completions — caching, usage metering, swappable providers
+- `python/app_pkg/domains/ai_tools.py` — a typed tool registry agents call over HTTP — arguments validated, errors contained
+- `python/app_pkg/domains/ai_workflow.py` — multi-step AI pipelines that always terminate — failures return a trace, not a crash
+- `python/app_pkg/domains/api_keys.py` — issue, verify, rotate, and revoke scoped API keys — secrets hashed, shown only once
+- `python/app_pkg/domains/audit_log.py` — append-only, hash-chained audit trail — tampering is detectable
+- `python/app_pkg/domains/auth.py` — email/password auth with sessions, refresh, logout, password reset, and verification
+- `python/app_pkg/domains/billing.py` — subscription billing — plans from a fixed catalog, prices never client-set
+- `python/app_pkg/domains/chat_threads/__init__.py` — chat_threads: package entry
+- `python/app_pkg/domains/chat_threads/router.py` — chat_threads: the router module
+- `python/app_pkg/domains/crew.py` — multi-agent orchestration — handoffs always terminate, even when roles loop
+- `python/app_pkg/domains/email_outbox.py` — outbound email with exactly-once sends and header-injection protection
+- `python/app_pkg/domains/evals.py` — score model outputs against frozen golden suites — deterministic and offline
+- `python/app_pkg/domains/feature_flags.py` — feature flags with deterministic percentage rollout — no flapping mid-ramp
+- `python/app_pkg/domains/file_store/__init__.py` — file_store: package entry
+- `python/app_pkg/domains/file_store/config.py` — file_store: the config module
+- `python/app_pkg/domains/file_store/ports.py` — file_store: the ports module
+- `python/app_pkg/domains/file_store/providers.py` — file_store: the providers module
+- `python/app_pkg/domains/file_store/router.py` — file_store: the router module
+- `python/app_pkg/domains/file_store/validate.py` — file_store: the validate module
+- `python/app_pkg/domains/health.py` — liveness probe at GET /health
+- `python/app_pkg/domains/idempotency.py` — replay-safe writes via Idempotency-Key — a retry can never double-charge
+- `python/app_pkg/domains/invitations.py` — invite + accept flow with single-use, expiring tokens
+- `python/app_pkg/domains/invoices/__init__.py` — invoices: package entry
+- `python/app_pkg/domains/invoices/routes.py` — invoices: the routes module
+- `python/app_pkg/domains/job_queue.py` — background job queue with leases, retries with backoff, and dead-lettering
+- `python/app_pkg/domains/ledger.py` — double-entry ledger — every transaction balances, balances are derived
+- `python/app_pkg/domains/llm_usage.py` — per-call LLM token and cost metering — server-priced, deduplicated, integer-exact
+- `python/app_pkg/domains/notifications.py` — in-app notifications with forgery-proof senders and read-state
+- `python/app_pkg/domains/oauth.py` — OAuth 2.0 authorization-code flow (server side)
+- `python/app_pkg/domains/orgs/__init__.py` — orgs: package entry
+- `python/app_pkg/domains/orgs/router.py` — orgs: the router module
+- `python/app_pkg/domains/payments.py` — provider-agnostic payment intents with idempotent, race-safe creation
+- `python/app_pkg/domains/prompt_registry.py` — versioned, immutable prompt templates with movable labels and safe {{var}} rendering
+- `python/app_pkg/domains/rag.py` — retrieval pipeline — chunk, embed, rank, and cite over each user's own documents
+- `python/app_pkg/domains/ratelimit.py` — fixed-window rate limiting that holds under concurrent processes
+- `python/app_pkg/domains/rbac.py` — role-based access control — deny by default, admin-gated changes
+- `python/app_pkg/domains/records.py` — typed, owner-scoped CRUD records — the substrate to model your app's objects on
+- `python/app_pkg/domains/reporting.py` — owner-scoped analytics — ingest facts, run group-by rollups with exact sums
+- `python/app_pkg/domains/search.py` — token full-text search over each user's own documents
+- `python/app_pkg/domains/secrets_vault/__init__.py` — secrets_vault: package entry
+- `python/app_pkg/domains/secrets_vault/router.py` — secrets_vault: the router module
+- `python/app_pkg/domains/settings.py` — owner-scoped settings with a fixed, typed schema
+- `python/app_pkg/domains/storage/__init__.py` — storage: package entry
+- `python/app_pkg/domains/storage/config.py` — storage: the config module
+- `python/app_pkg/domains/storage/ports.py` — storage: the ports module
+- `python/app_pkg/domains/storage/providers/__init__.py` — storage: package entry
+- `python/app_pkg/domains/storage/providers/durable.py` — storage: the durable module
+- `python/app_pkg/domains/storage/providers/factory.py` — storage: the factory module
+- `python/app_pkg/domains/storage/providers/s3.py` — storage: the s3 module
+- `python/app_pkg/domains/storage/router.py` — storage: the router module
+- `python/app_pkg/domains/stripe.py` — Stripe-compatible charges and webhook verification with secret rotation
+- `python/app_pkg/domains/teams.py` — teams within an org — managed only by that org's owners and admins
+- `python/app_pkg/domains/tenancy.py` — tenant isolation — another tenant's rows are invisible, not just forbidden
+- `python/app_pkg/domains/users.py` — user profiles + lifecycle, separate from auth credentials
+- `python/app_pkg/domains/vectorstore.py` — embedding index + top-k cosine retrieval — per-user and deterministic
+- `python/app_pkg/domains/webhooks.py` — signed outbound + verified inbound webhooks with secret rotation and replay dedup
+- `python/app_pkg/parts/__init__.py` — package marker
+- `python/app_pkg/parts/chunking.py` — deterministic fixed-window CODE-POINT chunking for retrieval (the rag pipeline): split a document into
+- `python/app_pkg/parts/currency.py` — ISO-4217 closed set of active circulating currency codes (case-insensitive membership) — a money domain
+- `python/app_pkg/parts/digest.py` — canonical fingerprint: sha256 hex over ':'-joined string forms — one hashing convention for chain links and
+- `python/app_pkg/parts/embedding.py` — the deterministic OFFLINE embedder + cosine the retrieval domains (vectorstore, rag) share: embed(text) is an
+- `python/app_pkg/parts/env_int.py` — Parse an integer from a RAW environment value UNIFORMLY across python/go/node, with a default + optional
+- `python/app_pkg/parts/idempotent_claim.py` — the stateful claim-or-replay composition: write-if-unclaimed-else-return-winner, atomic across processes over
+- `python/app_pkg/parts/paginate.py` — bounded-page + opaque-cursor pagination: a stable-ordered slice plus a canonical base64url offset cursor
+- `python/app_pkg/parts/password_hash.py` — PBKDF2-HMAC-SHA256 password hashing (OWASP ASVS V2): salted, slow, constant-time verify — the one pbkdf2
+- `python/app_pkg/parts/signing.py` — HMAC-SHA256 signing: Standard Webhooks 'v1,<b64>' + Stripe 't=,v1=<hex>' — one hmac primitive, two schemes
+- `python/app_pkg/parts/well_formed.py` — the identifier validator + input-containment toolkit: a non-empty, at-most-1024-char string with no control
+- `python/requirements.txt` — python deps
+- `python/tests/test_app.py` — the table-driven suite
+
+## go/
+- `go/Dockerfile` — container image: non-root, port 8080, binds 0.0.0.0, /data volume
+- `go/cmd/server/main.go` — entrypoint (PORT)
+- `go/go.mod` — module + deps
+- `go/go.sum` — dependency lockfile
+- `go/internal/app/app.go` — wiring: the route mux + problem+json 404
+- `go/internal/app/app_test.go` — the table-driven suite
+- `go/internal/core/core.go` — the KV facade + counters + decode + clock
+- `go/internal/core/runtime.go` — the error envelope + server wrap + sessions
+- `go/internal/core/session.go` — app source
+- `go/internal/core/store_factory.go` — selects the store backend from the environment
+- `go/internal/core/store_postgres.go` — the Postgres store driver (built with -tags postgres)
+- `go/internal/core/store_postgres_stub.go` — fail-loud Postgres stub for the default (pgx-free) build
+- `go/internal/core/store_sqlite.go` — the SQLite store driver (the default backend)
+- `go/internal/core/stream.go` — app source
+- `go/internal/core/usage.go` — app source
+- `go/internal/domains/admin/admin.go` — admin-only actions behind a bearer token, every action logged immutably
+- `go/internal/domains/agent/agent.go` — AI agent runtime — sessions, tool calls, and a bounded run loop that always stops
+- `go/internal/domains/agent/providers.go` — agent: the providers module
+- `go/internal/domains/agent/runtime.go` — agent: the runtime module
+- `go/internal/domains/agent/tools.go` — agent: the tools module
+- `go/internal/domains/ai_memory/ai_memory.go` — long-term agent memory with TTL, size caps, and per-user isolation
+- `go/internal/domains/ai_memory/store.go` — ai_memory: the store module
+- `go/internal/domains/ai_provider/ai_provider.go` — one LLM gateway for completions — caching, usage metering, swappable providers
+- `go/internal/domains/ai_tools/ai_tools.go` — a typed tool registry agents call over HTTP — arguments validated, errors contained
+- `go/internal/domains/ai_workflow/ai_workflow.go` — multi-step AI pipelines that always terminate — failures return a trace, not a crash
+- `go/internal/domains/api_keys/api_keys.go` — issue, verify, rotate, and revoke scoped API keys — secrets hashed, shown only once
+- `go/internal/domains/audit_log/audit_log.go` — append-only, hash-chained audit trail — tampering is detectable
+- `go/internal/domains/auth/auth.go` — email/password auth with sessions, refresh, logout, password reset, and verification
+- `go/internal/domains/billing/billing.go` — subscription billing — plans from a fixed catalog, prices never client-set
+- `go/internal/domains/chat_threads/messages.go` — chat_threads: the messages module
+- `go/internal/domains/chat_threads/store.go` — chat_threads: the store module
+- `go/internal/domains/chat_threads/threads.go` — chat_threads: the threads module
+- `go/internal/domains/crew/crew.go` — multi-agent orchestration — handoffs always terminate, even when roles loop
+- `go/internal/domains/email_outbox/email_outbox.go` — outbound email with exactly-once sends and header-injection protection
+- `go/internal/domains/evals/evals.go` — score model outputs against frozen golden suites — deterministic and offline
+- `go/internal/domains/feature_flags/feature_flags.go` — feature flags with deterministic percentage rollout — no flapping mid-ramp
+- `go/internal/domains/file_store/file_store.go` — store and serve real file bytes with per-user quotas and content-addressed etags
+- `go/internal/domains/file_store/store.go` — file_store: the store module
+- `go/internal/domains/file_store/validate.go` — file_store: the validate module
+- `go/internal/domains/health/health.go` — liveness probe at GET /health
+- `go/internal/domains/idempotency/idempotency.go` — replay-safe writes via Idempotency-Key — a retry can never double-charge
+- `go/internal/domains/invitations/invitations.go` — invite + accept flow with single-use, expiring tokens
+- `go/internal/domains/invoices/invoices.go` — multi-line invoices — totals always recomputed server-side, never client-set
+- `go/internal/domains/invoices/lifecycle.go` — invoices: the lifecycle module
+- `go/internal/domains/job_queue/job_queue.go` — background job queue with leases, retries with backoff, and dead-lettering
+- `go/internal/domains/ledger/ledger.go` — double-entry ledger — every transaction balances, balances are derived
+- `go/internal/domains/llm_usage/llm_usage.go` — per-call LLM token and cost metering — server-priced, deduplicated, integer-exact
+- `go/internal/domains/notifications/notifications.go` — in-app notifications with forgery-proof senders and read-state
+- `go/internal/domains/oauth/oauth.go` — OAuth 2.0 authorization-code flow (server side)
+- `go/internal/domains/orgs/listing.go` — orgs: the listing module
+- `go/internal/domains/orgs/orgs.go` — organizations/workspaces with roles, member invites, and exactly one owner
+- `go/internal/domains/payments/payments.go` — provider-agnostic payment intents with idempotent, race-safe creation
+- `go/internal/domains/prompt_registry/prompt_registry.go` — versioned, immutable prompt templates with movable labels and safe {{var}} rendering
+- `go/internal/domains/rag/rag.go` — retrieval pipeline — chunk, embed, rank, and cite over each user's own documents
+- `go/internal/domains/ratelimit/ratelimit.go` — fixed-window rate limiting that holds under concurrent processes
+- `go/internal/domains/rbac/rbac.go` — role-based access control — deny by default, admin-gated changes
+- `go/internal/domains/records/records.go` — typed, owner-scoped CRUD records — the substrate to model your app's objects on
+- `go/internal/domains/reporting/reporting.go` — owner-scoped analytics — ingest facts, run group-by rollups with exact sums
+- `go/internal/domains/search/search.go` — token full-text search over each user's own documents
+- `go/internal/domains/secrets_vault/lifecycle.go` — secrets_vault: the lifecycle module
+- `go/internal/domains/secrets_vault/seal.go` — secrets_vault: the seal module
+- `go/internal/domains/secrets_vault/secrets_vault.go` — versioned secret storage — reveal-once reads, irreversible destroy, access audit
+- `go/internal/domains/settings/settings.go` — owner-scoped settings with a fixed, typed schema
+- `go/internal/domains/storage/providers.go` — storage: the providers module
+- `go/internal/domains/storage/storage.go` — object storage behind a swappable provider — per-user keys, content-addressed etags
+- `go/internal/domains/stripe/stripe.go` — Stripe-compatible charges and webhook verification with secret rotation
+- `go/internal/domains/teams/teams.go` — teams within an org — managed only by that org's owners and admins
+- `go/internal/domains/tenancy/tenancy.go` — tenant isolation — another tenant's rows are invisible, not just forbidden
+- `go/internal/domains/users/users.go` — user profiles + lifecycle, separate from auth credentials
+- `go/internal/domains/vectorstore/vectorstore.go` — embedding index + top-k cosine retrieval — per-user and deterministic
+- `go/internal/domains/webhooks/webhooks.go` — signed outbound + verified inbound webhooks with secret rotation and replay dedup
+- `go/internal/parts/chunking/chunking.go` — deterministic fixed-window CODE-POINT chunking for retrieval (the rag pipeline): split a document into
+- `go/internal/parts/currency/currency.go` — ISO-4217 closed set of active circulating currency codes (case-insensitive membership) — a money domain
+- `go/internal/parts/digest/digest.go` — canonical fingerprint: sha256 hex over ':'-joined string forms — one hashing convention for chain links and
+- `go/internal/parts/embedding/embedding.go` — the deterministic OFFLINE embedder + cosine the retrieval domains (vectorstore, rag) share: embed(text) is an
+- `go/internal/parts/env_int/env_int.go` — Parse an integer from a RAW environment value UNIFORMLY across python/go/node, with a default + optional
+- `go/internal/parts/idempotent_claim/idempotent_claim.go` — the stateful claim-or-replay composition: write-if-unclaimed-else-return-winner, atomic across processes over
+- `go/internal/parts/paginate/paginate.go` — bounded-page + opaque-cursor pagination: a stable-ordered slice plus a canonical base64url offset cursor
+- `go/internal/parts/password_hash/password_hash.go` — PBKDF2-HMAC-SHA256 password hashing (OWASP ASVS V2): salted, slow, constant-time verify — the one pbkdf2
+- `go/internal/parts/signing/signing.go` — HMAC-SHA256 signing: Standard Webhooks 'v1,<b64>' + Stripe 't=,v1=<hex>' — one hmac primitive, two schemes
+- `go/internal/parts/well_formed/well_formed.go` — the identifier validator + input-containment toolkit: a non-empty, at-most-1024-char string with no control
+
+## node/
+- `node/Dockerfile` — container image: non-root, port 8080, binds 0.0.0.0, /data volume
+- `node/package.json` — scripts: start, test
+- `node/server.js` — entrypoint (PORT)
+- `node/src/app.js` — wiring: the routes table
+- `node/src/core/runtime.js` — server, error envelope, clock, sessions
+- `node/src/core/store.js` — the KV facade + counters + the storeDo RMW seam
+- `node/src/core/store_factory.js` — selects the store backend from the environment
+- `node/src/core/store_postgres.js` — the Postgres store driver (loads the optional `pg` package)
+- `node/src/core/store_sqlite.js` — the SQLite store driver (the default backend)
+- `node/src/core/usage.js` — app source
+- `node/src/domains/admin.js` — admin-only actions behind a bearer token, every action logged immutably
+- `node/src/domains/agent/index.js` — agent: package entry
+- `node/src/domains/agent/providers.js` — agent: the providers module
+- `node/src/domains/agent/runtime.js` — agent: the runtime module
+- `node/src/domains/agent/tools.js` — agent: the tools module
+- `node/src/domains/ai_memory/index.js` — ai_memory: package entry
+- `node/src/domains/ai_provider.js` — one LLM gateway for completions — caching, usage metering, swappable providers
+- `node/src/domains/ai_tools.js` — a typed tool registry agents call over HTTP — arguments validated, errors contained
+- `node/src/domains/ai_workflow.js` — multi-step AI pipelines that always terminate — failures return a trace, not a crash
+- `node/src/domains/api_keys.js` — issue, verify, rotate, and revoke scoped API keys — secrets hashed, shown only once
+- `node/src/domains/audit_log.js` — append-only, hash-chained audit trail — tampering is detectable
+- `node/src/domains/auth.js` — email/password auth with sessions, refresh, logout, password reset, and verification
+- `node/src/domains/billing.js` — subscription billing — plans from a fixed catalog, prices never client-set
+- `node/src/domains/chat_threads/index.js` — chat_threads: package entry
+- `node/src/domains/crew.js` — multi-agent orchestration — handoffs always terminate, even when roles loop
+- `node/src/domains/email_outbox.js` — outbound email with exactly-once sends and header-injection protection
+- `node/src/domains/evals.js` — score model outputs against frozen golden suites — deterministic and offline
+- `node/src/domains/feature_flags.js` — feature flags with deterministic percentage rollout — no flapping mid-ramp
+- `node/src/domains/file_store/index.js` — file_store: package entry
+- `node/src/domains/file_store/store.js` — file_store: the store module
+- `node/src/domains/file_store/validate.js` — file_store: the validate module
+- `node/src/domains/health.js` — liveness probe at GET /health
+- `node/src/domains/idempotency.js` — replay-safe writes via Idempotency-Key — a retry can never double-charge
+- `node/src/domains/invitations.js` — invite + accept flow with single-use, expiring tokens
+- `node/src/domains/invoices/index.js` — invoices: package entry
+- `node/src/domains/job_queue.js` — background job queue with leases, retries with backoff, and dead-lettering
+- `node/src/domains/ledger.js` — double-entry ledger — every transaction balances, balances are derived
+- `node/src/domains/llm_usage.js` — per-call LLM token and cost metering — server-priced, deduplicated, integer-exact
+- `node/src/domains/notifications.js` — in-app notifications with forgery-proof senders and read-state
+- `node/src/domains/oauth.js` — OAuth 2.0 authorization-code flow (server side)
+- `node/src/domains/orgs/index.js` — orgs: package entry
+- `node/src/domains/payments.js` — provider-agnostic payment intents with idempotent, race-safe creation
+- `node/src/domains/prompt_registry.js` — versioned, immutable prompt templates with movable labels and safe {{var}} rendering
+- `node/src/domains/rag.js` — retrieval pipeline — chunk, embed, rank, and cite over each user's own documents
+- `node/src/domains/ratelimit.js` — fixed-window rate limiting that holds under concurrent processes
+- `node/src/domains/rbac.js` — role-based access control — deny by default, admin-gated changes
+- `node/src/domains/records.js` — typed, owner-scoped CRUD records — the substrate to model your app's objects on
+- `node/src/domains/reporting.js` — owner-scoped analytics — ingest facts, run group-by rollups with exact sums
+- `node/src/domains/search.js` — token full-text search over each user's own documents
+- `node/src/domains/secrets_vault/index.js` — secrets_vault: package entry
+- `node/src/domains/settings.js` — owner-scoped settings with a fixed, typed schema
+- `node/src/domains/storage/index.js` — storage: package entry
+- `node/src/domains/storage/providers.js` — storage: the providers module
+- `node/src/domains/stripe.js` — Stripe-compatible charges and webhook verification with secret rotation
+- `node/src/domains/teams.js` — teams within an org — managed only by that org's owners and admins
+- `node/src/domains/tenancy.js` — tenant isolation — another tenant's rows are invisible, not just forbidden
+- `node/src/domains/users.js` — user profiles + lifecycle, separate from auth credentials
+- `node/src/domains/vectorstore.js` — embedding index + top-k cosine retrieval — per-user and deterministic
+- `node/src/domains/webhooks.js` — signed outbound + verified inbound webhooks with secret rotation and replay dedup
+- `node/src/parts/chunking.js` — deterministic fixed-window CODE-POINT chunking for retrieval (the rag pipeline): split a document into
+- `node/src/parts/currency.js` — ISO-4217 closed set of active circulating currency codes (case-insensitive membership) — a money domain
+- `node/src/parts/digest.js` — canonical fingerprint: sha256 hex over ':'-joined string forms — one hashing convention for chain links and
+- `node/src/parts/embedding.js` — the deterministic OFFLINE embedder + cosine the retrieval domains (vectorstore, rag) share: embed(text) is an
+- `node/src/parts/env_int.js` — Parse an integer from a RAW environment value UNIFORMLY across python/go/node, with a default + optional
+- `node/src/parts/idempotent_claim.js` — the stateful claim-or-replay composition: write-if-unclaimed-else-return-winner, atomic across processes over
+- `node/src/parts/paginate.js` — bounded-page + opaque-cursor pagination: a stable-ordered slice plus a canonical base64url offset cursor
+- `node/src/parts/password_hash.js` — PBKDF2-HMAC-SHA256 password hashing (OWASP ASVS V2): salted, slow, constant-time verify — the one pbkdf2
+- `node/src/parts/signing.js` — HMAC-SHA256 signing: Standard Webhooks 'v1,<b64>' + Stripe 't=,v1=<hex>' — one hmac primitive, two schemes
+- `node/src/parts/well_formed.js` — the identifier validator + input-containment toolkit: a non-empty, at-most-1024-char string with no control
+- `node/test/app.test.js` — the table-driven suite

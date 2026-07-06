@@ -1,0 +1,55 @@
+name: verify
+on: [push, pull_request]
+permissions: { contents: read }
+# block style (NOT flow `{ }`): the ${{ }} expression's braces collide with YAML flow-mapping syntax, which makes
+# GitHub reject the whole workflow ("workflow file issue", 0s fail). Block style keeps the expression out of `{ }`.
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: full offline proof (sqlite, all three suites)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go/go.mod }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install -r python/requirements.txt
+      - name: verify (baseline + suites + invariants + routes + parity + error-shape + durability)
+        run: python verify.py
+
+  verify-postgres:
+    name: durability on Postgres (python + node)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: verify }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:verify@localhost:5432/postgres
+      SECURE_DELETE_ACK: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go/go.mod }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: pip install -r python/requirements.txt
+      - run: pip install 'psycopg[binary]>=3.2,<4'
+      # --no-save keeps package.json byte-identical, so the shipped baseline reports no drift
+      - run: cd node && npm install --no-save pg
+      - name: verify incl. Postgres durability (go skips PG by design -- it needs a -tags postgres rebuild)
+        run: python verify.py

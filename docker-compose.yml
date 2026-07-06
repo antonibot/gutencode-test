@@ -1,0 +1,35 @@
+# Pick ONE language:  docker compose --profile python up --build
+#                     docker compose --profile go up --build
+#                     docker compose --profile node up --build
+# Postgres instead of SQLite:  docker compose --profile node --profile postgres up --build
+#   then uncomment DATABASE_URL + SECURE_DELETE_ACK below (and read the note in .env.example first).
+services:
+  api-python:
+    build: ./python
+    profiles: [python]
+    ports: ["8080:8080"]
+    environment: &app-env
+      DATABASE_PATH: /data/app.db
+      # DATABASE_URL: postgres://app:app@postgres:5432/app   # needs the language's PG driver -- see DEPLOY.md
+      # SECURE_DELETE_ACK: "1"                               # REQUIRED on Postgres (see .env.example)
+      # ADMIN_TOKEN / SERVICE_TOKEN / WEBHOOK_SECRETS / STRIPE_WEBHOOK_SECRET: set real values before exposing
+    volumes: [py-data:/data]
+  api-go:
+    build: ./go
+    profiles: [go]
+    ports: ["8080:8080"]
+    environment: *app-env
+    volumes: [go-data:/data]
+  api-node:
+    build: ./node
+    profiles: [node]
+    ports: ["8080:8080"]
+    environment: *app-env
+    volumes: [node-data:/data]
+  postgres:
+    image: postgres:16-alpine
+    profiles: [postgres]
+    environment: { POSTGRES_USER: app, POSTGRES_PASSWORD: app, POSTGRES_DB: app }
+    ports: ["5432:5432"]
+    volumes: [pg-data:/var/lib/postgresql/data]
+volumes: { py-data: {}, go-data: {}, node-data: {}, pg-data: {} }
